@@ -1,0 +1,11 @@
+name: "Add Pull Request Reviewer"
+description: "Adds reviewer(s) to a pull request"
+
+inputs:
+  token:
+    required: true
+    description: GitHub Personal Access Token
+
+runs:
+  using: "node12"
+  main: "dist/index.js"
