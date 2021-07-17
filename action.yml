@@ -1,10 +1,13 @@
-name: "Add Pull Request Reviewer"
-description: "Adds reviewer(s) to a pull request"
+name: "Check app version"
+description: "Check if latest version has been available on App Store"
 
 inputs:
   token:
     required: true
     description: GitHub Personal Access Token
+  slack_webhook:
+    required: true
+    description: Slack webhook URL
 
 runs:
   using: "node12"

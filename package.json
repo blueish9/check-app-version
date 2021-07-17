@@ -1,7 +1,7 @@
 {
   "name": "check-app-version",
   "version": "1.0.0",
-  "description": "Auto assign PR author and select reviewers randomly",
+  "description": "Check if latest version has been available on App Store",
   "main": "index.js",
   "scripts": {
     "build": "tsc && ncc build lib/main.js"
@@ -10,6 +10,9 @@
   "dependencies": {
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
+    "@slack/webhook": "^6.0.0",
+    "axios": "^0.21.1",
+    "moment": "^2.29.1",
     "xmldom": "^0.6.0",
     "xpath": "^0.0.32"
   },
