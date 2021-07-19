@@ -1,6 +1,9 @@
+// @ts-nocheck
 //const {Octokit} = require('@octokit/core');
-const core = require('@actions/core');
-const github = require('@actions/github');
+/*const core = require('@actions/core');
+const github = require('@actions/github');*/
+import * as core from "@actions/core";
+import * as github from "@actions/github";
 
 const {IncomingWebhook} = require('@slack/webhook');
 

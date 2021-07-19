@@ -9,6 +9,153 @@ module.exports = JSON.parse('{"_from":"@slack/webhook@^6.0.0","_id":"@slack/webh
 
 /***/ }),
 
+/***/ 4822:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+// @ts-nocheck
+//const {Octokit} = require('@octokit/core');
+/*const core = require('@actions/core');
+const github = require('@actions/github');*/
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
+const { IncomingWebhook } = __nccwpck_require__(1095);
+const moment = __nccwpck_require__(9623);
+const xpath = __nccwpck_require__(5319);
+const DOMParser = __nccwpck_require__(7286)/* .DOMParser */ .a;
+const axios = __nccwpck_require__(6545);
+const DEBUG = false;
+const log = DEBUG ? console.log : core.info;
+const main = async () => {
+    const result = await compareVersion();
+    if (!result)
+        return log('!!!');
+    log(result);
+    const { version, stores } = result;
+    const availableList = stores.reduce((message, country) => {
+        return message + `\n- ${country}`;
+    }, '');
+    webhook.send({
+        text: `
+    v${version} is available on App Store: ${availableList}
+    `,
+    });
+};
+const compareVersion = async () => {
+    const milestones = await GhRequest.GET({ url: 'milestones' });
+    if (!milestones || milestones.length < 1)
+        return;
+    const today = moment();
+    const releases = milestones.filter(item => {
+        return item.title.startsWith('v') && item.state === 'open' && moment(item.due_on).isBefore(today);
+    });
+    if (!releases || releases.length < 1)
+        return;
+    const latestRelease = releases[0];
+    const latestVersion = latestRelease.title.replace('v', '');
+    let stores = await Promise.all(Countries.map(async (country) => {
+        const html = await new Promise(resolve => axios({
+            method: 'get',
+            url: getAppStoreLink(country)
+        }).then(response => {
+            if (response.status === 200)
+                return resolve(response.data);
+            resolve(undefined);
+        }));
+        if (!html)
+            return;
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const versionClass = 'whats-new__latest__version';
+        const nodes = xpath.select(`//p[contains(concat(' ',normalize-space(@class),' '),' ${versionClass} ')]`, doc);
+        if (nodes.length < 1 || !nodes[0].firstChild)
+            return;
+        const storeVersion = nodes[0].firstChild.data;
+        if (storeVersion.includes(latestVersion)) {
+            return country.toUpperCase();
+        }
+    }));
+    stores = stores.filter(st => st);
+    if (stores.length < 1)
+        return;
+    const description = stores.reduce((message, country) => {
+        return message + country + DELIMITER;
+    }, 'Available on App Store: ');
+    const updated = await GhRequest.PATCH({
+        url: 'milestones/' + latestRelease.number,
+        params: {
+            description,
+            state: stores.length === Countries.length ? 'closed' : 'open'
+        }
+    });
+    if (!updated)
+        return;
+    return { version: latestVersion, stores };
+};
+//const Countries = ['sg', 'us', 'vn'];
+const Countries = ['sg', 'us'];
+const DELIMITER = ', ';
+const ASPIRE_APP_STORE = 'https://apps.apple.com/{country}/app/aspire-business-account-card/id1514566206';
+const getAppStoreLink = country => ASPIRE_APP_STORE.replace('{country}', country);
+const [octokit, webhook] = (() => {
+    const slackConfig = {
+        username: 'App Store bot',
+        icon_url: 'https://www.apple.com/v/app-store/a/images/overview/icon_appstore__ev0z770zyxoy_small_2x.png'
+    };
+    if (DEBUG) {
+        const octokit = new Octokit({ auth: '' }); // remember to fill
+        const slack_webhook = ''; // remember to fill
+        const webhook = new IncomingWebhook(slack_webhook, slackConfig);
+        return [octokit, webhook];
+    }
+    const githubToken = core.getInput("token");
+    const octokit = github.getOctokit(githubToken);
+    const slackWebhook = core.getInput("slack_webhook");
+    const webhook = new IncomingWebhook(slackWebhook, slackConfig);
+    return [octokit, webhook];
+})();
+const OWNER = 'weaspire';
+const REPO = 'neobank-app';
+const [GET, PATCH] = ['GET', 'PATCH'].map(method => method + ' ' + `/repos/${OWNER}/${REPO}/`);
+const GhRequest = {
+    GET: async ({ url, params }) => {
+        const response = await octokit.request(GET + url, params);
+        //log({response});
+        if (response && response.status === 200)
+            return response.data;
+    },
+    PATCH: async ({ url, params }) => {
+        const response = await octokit.request(PATCH + url, params);
+        //log({response});
+        if (response && response.status === 200)
+            return response.data;
+    },
+};
+main();
+
+
+/***/ }),
+
 /***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -22958,161 +23105,12 @@ module.exports = require("zlib");
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-//const {Octokit} = require('@octokit/core');
-const core = __nccwpck_require__(2186);
-const github = __nccwpck_require__(5438);
-
-const {IncomingWebhook} = __nccwpck_require__(1095);
-
-const moment = __nccwpck_require__(9623);
-const xpath = __nccwpck_require__(5319);
-const DOMParser = __nccwpck_require__(7286)/* .DOMParser */ .a;
-const axios = __nccwpck_require__(6545);
-
-const DEBUG = false;
-const log = DEBUG ? console.log : core.info
-
-const main = async () => {
-  const result = await compareVersion();
-  if (!result)
-    return log('!!!');
-
-  log(result);
-
-  const {version, stores} = result;
-
-  const availableList = stores.reduce((message, country) => {
-    return message + `\n- ${country}`;
-  }, '');
-
-  webhook.send({
-    text: `
-    v${version} is available on App Store: ${availableList}
-    `,
-  });
-};
-
-const compareVersion = async () => {
-  const milestones = await GhRequest.GET({url: 'milestones'});
-  if (!milestones || milestones.length < 1)
-    return;
-
-  const today = moment();
-  const releases = milestones.filter(item => {
-    return item.title.startsWith('v') && item.state === 'open' && moment(item.due_on).isBefore(today);
-  });
-  if (!releases || releases.length < 1)
-    return;
-
-  const latestRelease = releases[0];
-  const latestVersion = latestRelease.title.replace('v', '');
-
-  let stores = await Promise.all(Countries.map(async country => {
-    const html = await new Promise(resolve => axios({
-      method: 'get',
-      url: getAppStoreLink(country)
-    }).then(response => {
-      if (response.status === 200)
-        return resolve(response.data);
-      resolve(undefined);
-    }));
-
-    if (!html)
-      return;
-
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const versionClass = 'whats-new__latest__version';
-    const nodes = xpath.select(`//p[contains(concat(' ',normalize-space(@class),' '),' ${versionClass} ')]`, doc);
-    if (nodes.length < 1 || !nodes[0].firstChild)
-      return;
-
-    const storeVersion = nodes[0].firstChild.data;
-    if (storeVersion.includes(latestVersion)) {
-      return country.toUpperCase();
-    }
-  }));
-
-  stores = stores.filter(st => st);
-  if (stores.length < 1)
-    return;
-
-  const description = stores.reduce((message, country) => {
-    return message + country + DELIMITER;
-  }, 'Available on App Store: ');
-
-  const updated = await GhRequest.PATCH({
-    url: 'milestones/' + latestRelease.number,
-    params: {
-      description,
-      state: stores.length === Countries.length ? 'closed' : 'open'
-    }
-  });
-  if (!updated)
-    return;
-
-  return {version: latestVersion, stores};
-};
-
-//const Countries = ['sg', 'us', 'vn'];
-const Countries = ['sg', 'us'];
-const DELIMITER = ', ';
-
-const ASPIRE_APP_STORE = 'https://apps.apple.com/{country}/app/aspire-business-account-card/id1514566206';
-const getAppStoreLink = country => ASPIRE_APP_STORE.replace('{country}', country);
-
-
-const [octokit, webhook] = (() => {
-  const slackConfig = {
-    username: 'App Store bot',
-    icon_url: 'https://www.apple.com/v/app-store/a/images/overview/icon_appstore__ev0z770zyxoy_small_2x.png'
-  };
-
-  if (DEBUG) {
-    const octokit = new Octokit({auth: ''});  // remember to fill
-
-    const slack_webhook = '';  // remember to fill
-    const webhook = new IncomingWebhook(slack_webhook, slackConfig);
-
-    return [octokit, webhook];
-  }
-
-  const githubToken = core.getInput("token");
-  const octokit = github.getOctokit(githubToken);
-
-  const slackWebhook = core.getInput("slack_webhook");
-  const webhook = new IncomingWebhook(slackWebhook, slackConfig);
-
-  return [octokit, webhook];
-})();
-
-
-const OWNER = 'weaspire';
-const REPO = 'neobank-app';
-
-const [GET, PATCH] = ['GET', 'PATCH'].map(method => method + ' ' + `/repos/${OWNER}/${REPO}/`);
-
-const GhRequest = {
-  GET: async ({url, params}) => {
-    const response = await octokit.request(GET + url, params);
-    //log({response});
-    if (response && response.status === 200)
-      return response.data;
-  },
-  PATCH: async ({url, params}) => {
-    const response = await octokit.request(PATCH + url, params);
-    //log({response});
-    if (response && response.status === 200)
-      return response.data;
-  },
-};
-
-main();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4822);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;

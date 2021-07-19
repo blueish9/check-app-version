@@ -4,7 +4,7 @@
   "description": "Check if latest version has been available on App Store",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build src/index.js"
+    "build": "tsc && ncc build lib/index.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -22,6 +22,7 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-0": "^6.24.1"
+    "babel-preset-stage-0": "^6.24.1",
+    "typescript": "^4.3.5"
   }
 }
