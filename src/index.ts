@@ -13,12 +13,12 @@ const DOMParser = require('xmldom').DOMParser;
 const axios = require('axios');
 
 const DEBUG = false;
-const log = DEBUG ? console.log : core.info
+const log = DEBUG ? console.log : core.info;
 
 const main = async () => {
   const result = await compareVersion();
   if (!result)
-    return log('!!!');
+    return;
 
   log(result);
 
@@ -37,15 +37,19 @@ const main = async () => {
 
 const compareVersion = async () => {
   const milestones = await GhRequest.GET({url: 'milestones'});
-  if (!milestones || milestones.length < 1)
+  if (!milestones || milestones.length < 1) {
+    log('💥 failed to fetch /milestones');
     return;
+  }
 
   const today = moment();
   const releases = milestones.filter(item => {
     return item.title.startsWith('v') && item.state === 'open' && moment(item.due_on).isBefore(today);
   });
-  if (!releases || releases.length < 1)
+  if (!releases || releases.length < 1) {
+    log('💥 failed to find any recent release');
     return;
+  }
 
   const latestRelease = releases[0];
   const latestVersion = latestRelease.title.replace('v', '');
@@ -60,24 +64,35 @@ const compareVersion = async () => {
       resolve(undefined);
     }));
 
-    if (!html)
+    if (!html) {
+      log('💥 failed to fetch App Store page of ' + country);
       return;
+    }
 
-    const doc = new DOMParser().parseFromString(html, "text/html");
+    const doc = new DOMParser().parseFromString(html);
     const versionClass = 'whats-new__latest__version';
     const nodes = xpath.select(`//p[contains(concat(' ',normalize-space(@class),' '),' ${versionClass} ')]`, doc);
-    if (nodes.length < 1 || !nodes[0].firstChild)
+    //log(country);
+    //log(html);
+
+    if (nodes.length < 1 || !nodes[0].firstChild) {
+      log('💥 failed to find latest version on App Store ' + country);
       return;
+    }
 
     const storeVersion = nodes[0].firstChild.data;
     if (storeVersion.includes(latestVersion)) {
       return country.toUpperCase();
     }
+
+    log('💥 failed to find any match version of ' + country);
   }));
 
   stores = stores.filter(st => st);
-  if (stores.length < 1)
+  if (stores.length < 1) {
+    log('💥 no available version');
     return;
+  }
 
   const description = stores.reduce((message, country) => {
     return message + country + DELIMITER;
@@ -90,8 +105,10 @@ const compareVersion = async () => {
       state: stores.length === Countries.length ? 'closed' : 'open'
     }
   });
-  if (!updated)
+  if (!updated) {
+    log('💥 failed to update milestone');
     return;
+  }
 
   return {version: latestVersion, stores};
 };
@@ -149,4 +166,4 @@ const GhRequest = {
   },
 };
 
-main();
+main().catch((err) => core.setFailed(err));
