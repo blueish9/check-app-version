@@ -83,7 +83,7 @@ const compareVersion = async () => {
     url: 'milestones/' + latestRelease.number,
     params: {
       description,
-      //state: stores.length === Countries.length ? 'closed' : 'open'
+      state: stores.length === Countries.length ? 'closed' : 'open'
     }
   });
   if (!updated)
@@ -120,8 +120,8 @@ const [octokit, webhook, log] = (() => {
   const githubToken = core.getInput("token");
   const octokit = github.getOctokit(githubToken);
 
-  const slack_webhook = core.getInput("slack_webhook");
-  const webhook = new IncomingWebhook(slack_webhook, slackConfig);
+  const slackWebhook = core.getInput("slack_webhook");
+  const webhook = new IncomingWebhook(slackWebhook, slackConfig);
 
   const log = core.info;
 
