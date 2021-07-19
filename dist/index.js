@@ -17,6 +17,7 @@ var DOMParser = require('xmldom').DOMParser;
 var axios = require('axios');
 
 var DEBUG = false;
+var log = DEBUG ? console.log : core.info;
 
 var main = function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
@@ -240,9 +241,7 @@ var _ref4 = function () {
     var slack_webhook = ''; // remember to fill
     var _webhook = new IncomingWebhook(slack_webhook, slackConfig);
 
-    var _log = console.log;
-
-    return [_octokit, _webhook, _log];
+    return [_octokit, _webhook];
   }
 
   var githubToken = core.getInput("token");
@@ -251,14 +250,11 @@ var _ref4 = function () {
   var slackWebhook = core.getInput("slack_webhook");
   var webhook = new IncomingWebhook(slackWebhook, slackConfig);
 
-  var log = core.info;
-
-  return [octokit, webhook, log];
+  return [octokit, webhook];
 }(),
-    _ref5 = _slicedToArray(_ref4, 3),
+    _ref5 = _slicedToArray(_ref4, 2),
     octokit = _ref5[0],
-    webhook = _ref5[1],
-    log = _ref5[2];
+    webhook = _ref5[1];
 
 var OWNER = 'weaspire';
 var REPO = 'neobank-app';

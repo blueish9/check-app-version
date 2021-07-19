@@ -10,6 +10,7 @@ const DOMParser = require('xmldom').DOMParser;
 const axios = require('axios');
 
 const DEBUG = false;
+const log = DEBUG ? console.log : core.info
 
 const main = async () => {
   const result = await compareVersion();
@@ -100,7 +101,7 @@ const ASPIRE_APP_STORE = 'https://apps.apple.com/{country}/app/aspire-business-a
 const getAppStoreLink = country => ASPIRE_APP_STORE.replace('{country}', country);
 
 
-const [octokit, webhook, log] = (() => {
+const [octokit, webhook] = (() => {
   const slackConfig = {
     username: 'App Store bot',
     icon_url: 'https://www.apple.com/v/app-store/a/images/overview/icon_appstore__ev0z770zyxoy_small_2x.png'
@@ -112,9 +113,7 @@ const [octokit, webhook, log] = (() => {
     const slack_webhook = '';  // remember to fill
     const webhook = new IncomingWebhook(slack_webhook, slackConfig);
 
-    const log = console.log;
-
-    return [octokit, webhook, log];
+    return [octokit, webhook];
   }
 
   const githubToken = core.getInput("token");
@@ -123,9 +122,7 @@ const [octokit, webhook, log] = (() => {
   const slackWebhook = core.getInput("slack_webhook");
   const webhook = new IncomingWebhook(slackWebhook, slackConfig);
 
-  const log = core.info;
-
-  return [octokit, webhook, log];
+  return [octokit, webhook];
 })();
 
 
@@ -137,13 +134,13 @@ const [GET, PATCH] = ['GET', 'PATCH'].map(method => method + ' ' + `/repos/${OWN
 const GhRequest = {
   GET: async ({url, params}) => {
     const response = await octokit.request(GET + url, params);
-    log({response});
+    //log({response});
     if (response && response.status === 200)
       return response.data;
   },
   PATCH: async ({url, params}) => {
     const response = await octokit.request(PATCH + url, params);
-    log({response});
+    //log({response});
     if (response && response.status === 200)
       return response.data;
   },
